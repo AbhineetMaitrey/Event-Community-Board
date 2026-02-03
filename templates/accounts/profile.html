@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+/* ---------- MINIMAL TAG PILLS ---------- */
+.tag-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    margin: 4px 6px 4px 0;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    background: #eef2ff;
+    color: #3730a3;
+    border: 1px solid #c7d2fe;
+}
+
+/* Checkbox pills */
+#fav-tags label {
+    cursor: pointer;
+}
+#fav-tags input {
+    display: none;
+}
+#fav-tags input:checked + span {
+    background: #4f46e5;
+    color: #fff;
+    border-color: #4f46e5;
+}
+
+/* Profile image wrapper fix */
+.profile-header {
+    background: linear-gradient(135deg, var(--primary), var(--info));
+    height: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding-bottom: 12px;
+}
+
+.profile-avatar {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #ffffff;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+}
+</style>
+
+<div class="bg-white p-5 rounded-3 mb-5 shadow-sm border-start border-info border-5">
+    <div class="d-flex align-items-center">
+        <span class="fs-1 me-4">👤</span>
+        <div>
+            <h1 class="mb-1">My Profile</h1>
+            <p class="text-muted mb-0">Manage your personal information and preferences</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+
+    <!-- LEFT: PROFILE CARD -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm" style="border: none; border-radius: 14px; overflow: hidden;">
+            
+            <!-- HEADER (FIXED HEIGHT, NO CUT) -->
+            <div class="profile-header">
+                {% if user.profile.profile_pic %}
+                    <img src="{{ user.profile.profile_pic.url }}" class="profile-avatar">
+                {% else %}
+                    <div class="profile-avatar">👤</div>
+                {% endif %}
+            </div>
+
+            <div class="card-body text-center pt-4">
+
+                <!-- PROFILE COMPLETION -->
+                <h6 class="fw-600 mb-2">Profile Completion</h6>
+                <div class="progress mb-2" style="height: 8px;">
+                    <div class="progress-bar bg-success" style="width: {{ profile_completion }}%;"></div>
+                </div>
+                <small class="text-muted">{{ profile_completion }}% complete</small>
+
+                <hr class="my-4">
+
+                {% if user.profile.full_name %}
+                    <h5 class="fw-600 mb-1">{{ user.profile.full_name }}</h5>
+                {% endif %}
+                <p class="text-muted mb-2">@{{ user.username }}</p>
+
+                <div class="text-start small">
+                    <p><strong>📧 Email:</strong><br>{{ user.email }}</p>
+                    <p><strong>📱 Phone:</strong><br>{{ user.profile.phone|default:"Not provided" }}</p>
+                    <p><strong>🎂 Age:</strong><br>{{ user.profile.age|default:"Not provided" }}</p>
+                    <p><strong>📅 Joined:</strong><br>{{ user.date_joined|date:"M d, Y" }}</p>
+                </div>
+
+                <hr>
+
+                <h6 class="fw-600 mb-2">🎯 Interests</h6>
+                {% if user.profile.favourite_tags.exists %}
+                    {% for tag in user.profile.favourite_tags.all %}
+                        <span class="tag-pill">{{ tag.name }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span class="text-muted fst-italic">No interests selected</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: EDIT FORM -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm" style="border-radius: 14px; border: none;">
+            <div class="card-header bg-white">
+                <h5 class="fw-600 mb-0">✏️ Edit Profile</h5>
+            </div>
+
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        {{ form.full_name }}
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Age</label>
+                            {{ form.age }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            {{ form.phone }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        {{ form.address }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Bio</label>
+                        {{ form.bio }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Profile Picture</label>
+                        {{ form.profile_pic }}
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-3">
+                        <label class="form-label">🎯 Favourite Interests (max 5)</label>
+                        <div id="fav-tags">
+                            {% for checkbox in form.favourite_tags %}
+                                <label>
+                                    {{ checkbox.tag }}
+                                    <span class="tag-pill">{{ checkbox.choice_label }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="/" class="btn btn-outline-secondary">← Back</a>
+                        <button type="submit" class="btn btn-info">💾 Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="my-5">
+
+<h5 class="fw-600 mb-4">📊 Your Activity</h5>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm border-0">
+            <div class="card-body">
+                <div class="display-6 fw-bold text-primary">{{ created_events_count }}</div>
+                <p class="text-muted mb-0">Events Created</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm border-0">
+            <div class="card-body">
+                <div class="display-6 fw-bold text-success">{{ joined_events_count }}</div>
+                <p class="text-muted mb-0">Events Joined</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center shadow-sm border-0">
+            <div class="card-body">
+                <div class="display-6 fw-bold text-info">{{ joined_communities_count }}</div>
+                <p class="text-muted mb-0">Communities Joined</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
